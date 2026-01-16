@@ -4,6 +4,8 @@ import TimeSeriesChart from "./Charts/TimeSeriesChart";
 import CategoryBarChart from "./Charts/CategoryBarChart";
 import AnomalyTable from "./Charts/AnomalyTable";
 import ClusterTable from "./Charts/ClusterTable";
+import InsightsPanel from "./InsightsPanel";
+import TrendsForecastPanel from "./TrendsForecastPanel";
 import { useSchema } from "../hooks/useSchema";
 import {
   AnomalyResponse,
@@ -66,7 +68,14 @@ const Dashboard: React.FC = () => {
     useState<LoadingState>("idle");
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "trends" | "regional" | "anomalies" | "risk" | "quality"
+    | "overview"
+    | "trends"
+    | "regional"
+    | "anomalies"
+    | "risk"
+    | "quality"
+    | "insights"
+    | "forecast"
   >("overview");
 
   const selectedDataset = useMemo(
@@ -330,26 +339,29 @@ const Dashboard: React.FC = () => {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "280px 1fr",
-        gap: 16,
+        gridTemplateColumns: "300px 1fr",
+        gap: 20,
+        maxWidth: 1200,
+        margin: "0 auto",
       }}
     >
       <aside
         style={{
           borderRadius: 8,
           border: "1px solid #c5d6e8",
-          backgroundColor: "#f8fbff",
+          backgroundColor: "#f9fbff",
           padding: 16,
           display: "flex",
           flexDirection: "column",
-          gap: 16,
+          gap: 18,
           alignSelf: "flex-start",
           position: "sticky",
           top: 16,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
         }}
       >
         <div>
-          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
             Dataset
           </div>
           <select
@@ -370,14 +382,15 @@ const Dashboard: React.FC = () => {
               </option>
             ))}
           </select>
-          <div style={{ fontSize: 11, color: "#5f6368", marginTop: 6 }}>
-            Domain: {datasetCategory} • Records: {selectedDataset.rows} •
-            Fields: {selectedDataset.columns}
+          <div style={{ fontSize: 11, color: "#5f6368", marginTop: 8 }}>
+            Domain: {datasetCategory} • Records:{" "}
+            {selectedDataset.rows.toLocaleString()} • Fields:{" "}
+            {selectedDataset.columns}
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
             Metric field
           </div>
           <select
@@ -399,10 +412,13 @@ const Dashboard: React.FC = () => {
               </option>
             ))}
           </select>
+          <div style={{ fontSize: 10, color: "#5f6368", marginTop: 6 }}>
+            Affects numeric aggregations and anomalies.
+          </div>
         </div>
 
         <div>
-          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
             Group by field
           </div>
           <select
@@ -424,10 +440,13 @@ const Dashboard: React.FC = () => {
               </option>
             ))}
           </select>
+          <div style={{ fontSize: 10, color: "#5f6368", marginTop: 6 }}>
+            Splits charts and summaries by the selected dimension.
+          </div>
         </div>
 
         <div>
-          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 4 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
             Date field
           </div>
           <select
@@ -449,6 +468,9 @@ const Dashboard: React.FC = () => {
               </option>
             ))}
           </select>
+          <div style={{ fontSize: 10, color: "#5f6368", marginTop: 6 }}>
+            Enables time trends and forecasts.
+          </div>
         </div>
 
         <div>
@@ -466,6 +488,10 @@ const Dashboard: React.FC = () => {
                   backgroundColor:
                     selectedGroupBy === field ? "#e8f0fe" : "#f8f9fa",
                   fontSize: 10,
+                  boxShadow:
+                    selectedGroupBy === field
+                      ? "inset 0 1px 2px rgba(26,115,232,0.15)"
+                      : "none",
                 }}
               >
                 {field}
@@ -475,7 +501,7 @@ const Dashboard: React.FC = () => {
         </div>
       </aside>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <section style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
           <KPI label="Total records" value={totalRecords.toLocaleString()} />
           <KPI label="Numeric fields" value={numericFieldCount} />
@@ -488,11 +514,12 @@ const Dashboard: React.FC = () => {
             borderRadius: 8,
             border: "1px solid #dadce0",
             backgroundColor: "#ffffff",
-            padding: 12,
+            padding: 16,
             display: "grid",
             gridTemplateColumns: "1.6fr 1.2fr 1.2fr",
             gap: 16,
             fontSize: 12,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
           }}
         >
           <div>
@@ -522,6 +549,9 @@ const Dashboard: React.FC = () => {
                   {selectedDateField || "Not applied"}
                 </span>
               </div>
+              <div style={{ fontSize: 11, color: "#5f6368", marginTop: 8 }}>
+                Based on current filters
+              </div>
             </div>
           </div>
           <div>
@@ -540,7 +570,7 @@ const Dashboard: React.FC = () => {
             >
               {selectedDataset.numeric_fields.length === 0 && (
                 <div style={{ color: "#5f6368" }}>
-                  No numeric fields detected.
+                  No numeric fields detected. Try selecting a different dataset.
                 </div>
               )}
               {selectedDataset.numeric_fields.map((field) => (
@@ -580,7 +610,9 @@ const Dashboard: React.FC = () => {
                   Categorical fields
                 </div>
                 {selectedDataset.categorical_fields.length === 0 && (
-                  <div style={{ color: "#5f6368" }}>None</div>
+                  <div style={{ color: "#5f6368" }}>
+                    No categorical fields available.
+                  </div>
                 )}
                 {selectedDataset.categorical_fields.map((field) => (
                   <div key={field}>{field}</div>
@@ -607,7 +639,9 @@ const Dashboard: React.FC = () => {
                   Date and time fields
                 </div>
                 {selectedDataset.datetime_fields.length === 0 && (
-                  <div style={{ color: "#5f6368" }}>None</div>
+                  <div style={{ color: "#5f6368" }}>
+                    No date or time fields available.
+                  </div>
                 )}
                 {selectedDataset.datetime_fields.map((field) => (
                   <div key={field}>{field}</div>
@@ -622,7 +656,8 @@ const Dashboard: React.FC = () => {
             borderRadius: 8,
             border: "1px solid #dadce0",
             backgroundColor: "#ffffff",
-            padding: 8,
+            padding: 12,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
           }}
         >
           <div
@@ -630,8 +665,8 @@ const Dashboard: React.FC = () => {
               display: "flex",
               gap: 8,
               borderBottom: "1px solid #e0e0e0",
-              paddingBottom: 4,
-              marginBottom: 8,
+              paddingBottom: 6,
+              marginBottom: 10,
               fontSize: 12,
             }}
           >
@@ -646,6 +681,10 @@ const Dashboard: React.FC = () => {
                   activeTab === "overview" ? "#1a73e8" : "transparent",
                 color: activeTab === "overview" ? "#ffffff" : "#5f6368",
                 cursor: "pointer",
+                boxShadow:
+                  activeTab === "overview"
+                    ? "0 1px 2px rgba(26,115,232,0.3)"
+                    : "none",
               }}
             >
               Overview
@@ -661,6 +700,10 @@ const Dashboard: React.FC = () => {
                   activeTab === "trends" ? "#1a73e8" : "transparent",
                 color: activeTab === "trends" ? "#ffffff" : "#5f6368",
                 cursor: "pointer",
+                boxShadow:
+                  activeTab === "trends"
+                    ? "0 1px 2px rgba(26,115,232,0.3)"
+                    : "none",
               }}
             >
               Time trends
@@ -676,6 +719,10 @@ const Dashboard: React.FC = () => {
                   activeTab === "regional" ? "#1a73e8" : "transparent",
                 color: activeTab === "regional" ? "#ffffff" : "#5f6368",
                 cursor: "pointer",
+                boxShadow:
+                  activeTab === "regional"
+                    ? "0 1px 2px rgba(26,115,232,0.3)"
+                    : "none",
               }}
             >
               Group comparison
@@ -691,6 +738,10 @@ const Dashboard: React.FC = () => {
                   activeTab === "anomalies" ? "#1a73e8" : "transparent",
                 color: activeTab === "anomalies" ? "#ffffff" : "#5f6368",
                 cursor: "pointer",
+                boxShadow:
+                  activeTab === "anomalies"
+                    ? "0 1px 2px rgba(26,115,232,0.3)"
+                    : "none",
               }}
             >
               Anomalies
@@ -706,6 +757,10 @@ const Dashboard: React.FC = () => {
                   activeTab === "risk" ? "#1a73e8" : "transparent",
                 color: activeTab === "risk" ? "#ffffff" : "#5f6368",
                 cursor: "pointer",
+                boxShadow:
+                  activeTab === "risk"
+                    ? "0 1px 2px rgba(26,115,232,0.3)"
+                    : "none",
               }}
             >
               Risk clusters
@@ -721,9 +776,51 @@ const Dashboard: React.FC = () => {
                   activeTab === "quality" ? "#1a73e8" : "transparent",
                 color: activeTab === "quality" ? "#ffffff" : "#5f6368",
                 cursor: "pointer",
+                boxShadow:
+                  activeTab === "quality"
+                    ? "0 1px 2px rgba(26,115,232,0.3)"
+                    : "none",
               }}
             >
               Data quality
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("insights")}
+              style={{
+                padding: "6px 10px",
+                borderRadius: 4,
+                border: "none",
+                backgroundColor:
+                  activeTab === "insights" ? "#1a73e8" : "transparent",
+                color: activeTab === "insights" ? "#ffffff" : "#5f6368",
+                cursor: "pointer",
+                boxShadow:
+                  activeTab === "insights"
+                    ? "0 1px 2px rgba(26,115,232,0.3)"
+                    : "none",
+              }}
+            >
+              Insights & Recommendations
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("forecast")}
+              style={{
+                padding: "6px 10px",
+                borderRadius: 4,
+                border: "none",
+                backgroundColor:
+                  activeTab === "forecast" ? "#1a73e8" : "transparent",
+                color: activeTab === "forecast" ? "#ffffff" : "#5f6368",
+                cursor: "pointer",
+                boxShadow:
+                  activeTab === "forecast"
+                    ? "0 1px 2px rgba(26,115,232,0.3)"
+                    : "none",
+              }}
+            >
+              Trends & Forecast
             </button>
           </div>
 
@@ -742,6 +839,7 @@ const Dashboard: React.FC = () => {
                     border: "1px solid #dadce0",
                     backgroundColor: "#ffffff",
                     padding: 16,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                   }}
                 >
                   <div
@@ -872,7 +970,8 @@ const Dashboard: React.FC = () => {
                     <CategoryBarChart data={overviewGroupData} />
                   ) : (
                     <div style={{ fontSize: 12, color: "#5f6368" }}>
-                      No grouping fields available for comparison.
+                      No data available for the selected combination. Try
+                      adjusting filters.
                     </div>
                   )}
                 </div>
@@ -902,6 +1001,9 @@ const Dashboard: React.FC = () => {
                       .
                     </>
                   )}
+                  <span style={{ marginLeft: 6, color: "#5f6368" }}>
+                    Based on current filters
+                  </span>
                 </div>
                 {trendsState === "error" ? (
                   <div
@@ -912,6 +1014,7 @@ const Dashboard: React.FC = () => {
                       padding: 16,
                       fontSize: 12,
                       color: "#d93025",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                     }}
                   >
                     Unable to load trends.
@@ -932,6 +1035,7 @@ const Dashboard: React.FC = () => {
                       padding: 16,
                       fontSize: 12,
                       color: "#d93025",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                     }}
                   >
                     Unable to load group-wise analytics.
@@ -1098,6 +1202,30 @@ const Dashboard: React.FC = () => {
                       : "All columns are fully complete."}
                   </div>
                 </div>
+              </div>
+            )}
+            {activeTab === "insights" && (
+              <div>
+                <div
+                  style={{ fontSize: 12, color: "#5f6368", marginBottom: 8 }}
+                >
+                  Insights auto-update based on current selections.
+                </div>
+                <InsightsPanel
+                  datasetName={selectedDataset.name}
+                  metricField={selectedMetric}
+                  groupByField={selectedGroupBy}
+                  groupRows={groupByResult?.result.result || []}
+                  trendsSeries={trends?.result.series || []}
+                />
+              </div>
+            )}
+            {activeTab === "forecast" && (
+              <div>
+                <TrendsForecastPanel
+                  dateField={selectedDateField}
+                  trendsSeries={trends?.result.series || []}
+                />
               </div>
             )}
           </div>

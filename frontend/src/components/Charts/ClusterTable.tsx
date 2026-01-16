@@ -23,10 +23,13 @@ const ClusterTable: React.FC<ClusterTableProps> = ({
           borderRadius: 8,
           border: "1px solid #dadce0",
           backgroundColor: "#ffffff",
-          padding: 16
+          padding: 16,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
         }}
       >
-        <div style={{ fontSize: 12, color: "#5f6368" }}>No cluster information available.</div>
+        <div style={{ fontSize: 12, color: "#5f6368" }}>
+          No data available for the selected combination. Try adjusting filters.
+        </div>
       </div>
     );
   }
@@ -37,10 +40,12 @@ const ClusterTable: React.FC<ClusterTableProps> = ({
         borderRadius: 8,
         border: "1px solid #dadce0",
         backgroundColor: "#ffffff",
-        padding: 16
+        padding: 16,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
       }}
     >
-      <div style={{ fontSize: 13, marginBottom: 8 }}>Risk cluster summary</div>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Risk cluster summary</div>
+      <div style={{ fontSize: 11, color: "#5f6368", marginBottom: 8 }}>Based on current filters</div>
       <table
         style={{
           width: "100%",
@@ -147,4 +152,3 @@ const ClusterTable: React.FC<ClusterTableProps> = ({
 };
 
 export default ClusterTable;
-
